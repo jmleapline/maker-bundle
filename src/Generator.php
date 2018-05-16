@@ -168,7 +168,7 @@ class Generator
 
         $variables['relative_path'] = $this->fileManager->relativizePath($targetPath);
 
-        $templatePath = $templateName;
+        $templatePath = 'src/Resources/skeleton/'.$templateName;
         if (!file_exists($templatePath)) {
             $templatePath = __DIR__.'/Resources/skeleton/'.$templateName;
 
