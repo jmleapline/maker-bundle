@@ -113,15 +113,22 @@ final class MakeCrud extends AbstractMaker
             'Controller'
         );
 
-        $iter = 0;
-        do {
-            $formClassDetails = $generator->createClassNameDetails(
-                $entityClassDetails->getRelativeNameWithoutSuffix().($iter ?: '').'Type',
-                'Form\\',
-                'Type'
-            );
-            ++$iter;
-        } while (class_exists($formClassDetails->getFullName()));
+        $formClassDetails = $generator->createClassNameDetails(
+            $entityClassDetails->getRelativeNameWithoutSuffix(),
+            'Form\\',
+            'Type'
+        );
+
+        // JmL - not sure why it is iterating plus one. Commenting out just in case.
+        // $iter = 0;
+        // do {
+        //     $formClassDetails = $generator->createClassNameDetails(
+        //         $entityClassDetails->getRelativeNameWithoutSuffix().($iter ?: ''),
+        //         'Form\\',
+        //         'Type'
+        //     );
+        //     ++$iter;
+        // } while (class_exists($formClassDetails->getFullName()));
 
         $entityVarPlural = lcfirst(Inflector::pluralize($entityClassDetails->getShortName()));
         $entityVarSingular = lcfirst(Inflector::singularize($entityClassDetails->getShortName()));
