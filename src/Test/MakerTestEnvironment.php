@@ -129,7 +129,7 @@ final class MakerTestEnvironment
             try {
                 // lets do some magic here git is faster than copy
                 MakerTestProcess::create(
-                    'git clone "$FLEX_PATH" "$APP_PATH"',
+                    '\\' === \DIRECTORY_SEPARATOR ? 'git clone %FLEX_PATH% %APP_PATH%' : 'git clone "$FLEX_PATH" "$APP_PATH"',
                     \dirname($this->flexPath),
                     [
                         'FLEX_PATH' => $this->flexPath,
@@ -350,13 +350,20 @@ final class MakerTestEnvironment
         // fetch a few packages needed for testing
         MakerTestProcess::create('composer require phpunit browser-kit symfony/css-selector --prefer-dist --no-progress --no-suggest', $this->flexPath)
                         ->run();
+        $this->fs->remove($this->flexPath.'/vendor/symfony/phpunit-bridge');
+
+        if ('\\' !== \DIRECTORY_SEPARATOR) {
+            $this->fs->symlink('../../../../../../vendor/symfony/phpunit-bridge', './vendor/symfony/phpunit-bridge');
+        } else {
+            $this->fs->mirror(\dirname(__DIR__, 2).'/vendor/symfony/phpunit-bridge', $this->flexPath.'/vendor/symfony/phpunit-bridge');
+        }
 
         // temporarily ignoring indirect deprecations - see #237
         $replacements = [
             [
                 'filename' => '.env.test',
                 'find' => 'SYMFONY_DEPRECATIONS_HELPER=999999',
-                'replace' => 'SYMFONY_DEPRECATIONS_HELPER=weak_vendors',
+                'replace' => 'SYMFONY_DEPRECATIONS_HELPER=max[self]=0',
             ],
         ];
         $this->processReplacements($replacements, $this->flexPath);
@@ -439,12 +446,16 @@ echo json_encode($missingDependencies);
                     $version = $data['latest'];
                     $parts = explode('.', $version);
 
-                    return sprintf('%s.%s.x-dev', $parts[0], $parts[1]);
+                    $this->targetFlexVersion = sprintf('%s.%s.x-dev', $parts[0], $parts[1]);
+
+                    break;
                 case 'dev':
                     $version = $data['dev'];
                     $parts = explode('.', $version);
 
-                    return sprintf('%s.%s.x-dev', $parts[0], $parts[1]);
+                    $this->targetFlexVersion = sprintf('%s.%s.x-dev', $parts[0], $parts[1]);
+
+                    break;
                 default:
                     throw new \Exception('Invalid target version');
             }
